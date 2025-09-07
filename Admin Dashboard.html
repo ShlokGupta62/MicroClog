@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard - Micro Clog</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #001f3f;
+            margin: 0;
+            padding: 0;
+            color: #f5f5dc;
+        }
+        .header {
+            background: linear-gradient(90deg, #001833, #00264d);
+            color: #f5f5dc;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f5f5dc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        .header-buttons a {
+            color: #f5f5dc;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid #f5f5dc;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        .header-buttons a:hover {
+            background-color: #ffd700;
+            color: #001f3f;
+            border-color: #ffd700;
+        }
+        .main-content {
+            padding: 40px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .section {
+            background-color: rgba(255,255,255,0.05);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1.5px solid #f5f5dc;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            margin-bottom: 40px;
+        }
+        h2 {
+            color: #f5f5dc;
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #f5f5dc;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            background: #00264d;
+            color: #f5f5dc;
+            border: 1px solid #f5f5dc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        input::placeholder, textarea::placeholder {
+            color: #dcdcdc;
+        }
+        button.btn-submit {
+            background-color: #001f3f;
+            color: #f5f5dc;
+            border: 1px solid #f5f5dc;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        button.btn-submit:hover {
+            background-color: #ffd700;
+            color: #001f3f;
+            border-color: #ffd700;
+        }
+        .map-container {
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #f5f5dc;
+            margin-top: 20px;
+        }
+        #map { width: 100%; height: 100%; }
+        
+        /* Hotspot Grid */
+        .hotspot-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px;
+        }
+        .hotspot-card {
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid #f5f5dc;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .card-status {
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 0.9em;
+        }
+        .status-High { background-color: #e74c3c; }
+        .status-Medium { background-color: #f39c12; }
+        .status-Low { background-color: #2ecc71; }
+        .card-description {
+            color: #dcdcdc;
+            margin-bottom: 15px;
+        }
+        
+        /* Work Log Table */
+        .worklog-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 2px solid #f5f5dc;
+        }
+        .worklog-table th, .worklog-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f5f5dc;
+        }
+        .worklog-table th {
+            background-color: #00264d;
+            color: #f5f5dc;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .worklog-table tr:nth-child(even) {
+            background-color: rgba(255,255,255,0.05);
+        }
+        .status-completed { color: #2ecc71; font-weight: bold; }
+        .status-pending { color: #e74c3c; font-weight: bold; }
+        
+        /* Top Drains */
+        .top-drains-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .top-drain-card {
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid #f5f5dc;
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 260px;
+            max-width: 320px;
+        }
+        .drain-id {
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+        .drain-meta {
+            color: #dcdcdc;
+            margin-bottom: 8px;
+        }
+        
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .last-loaded {
+            background: #00264d;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #f5f5dc;
+            font-size: 0.95em;
+        }
+        
+        /* Message Box */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { padding: 20px; }
+            .header { flex-direction: column; padding: 20px; }
+            .header-buttons { margin-top: 15px; }
+            .header-buttons a { margin: 5px 0; display: inline-block; }
+            .hotspot-grid { grid-template-columns: 1fr; }
+            .top-drains-row { flex-direction: column; }
+            .toolbar { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Micro Clog Admin</h1>
+        <div class="header-buttons">
+            <a href="index.html" class="btn-back">Back to Login</a>
+            <a href="index.html" class="btn-logout">Log Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Top Risk Drains -->
+        <div class="section" id="top-drains-section">
+            <h2>Top Risk Drains</h2>
+            <p>Drains predicted to have the highest risk right now (live).</p>
+            <div id="top-drains-row" class="top-drains-row"></div>
+        </div>
+
+        <!-- Hotspot Management Section -->
+        <div class="section">
+            <h2>Hotspot Management Dashboard</h2>
+            <div id="hotspot-grid" class="hotspot-grid"></div>
+
+            <h3>Add New Hotspot</h3>
+            <label for="new-hotspot-name">Hotspot Name:</label>
+            <input type="text" id="new-hotspot-name" placeholder="e.g., Sector 5, Gate 1">
+
+            <label for="new-hotspot-description">Description:</label>
+            <textarea id="new-hotspot-description" placeholder="Describe the issue"></textarea>
+
+            <label for="new-hotspot-priority">Priority:</label>
+            <select id="new-hotspot-priority">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+
+            <button class="btn-submit" onclick="addHotspot()">Add Hotspot</button>
+        </div>
+
+        <!-- Map Interface Section -->
+        <div class="section">
+            <h2>Hotspot Map</h2>
+            <p>This map shows the geographical location of hotspots and ongoing work, with color-coded pins to indicate their priority: <span style="color:#e74c3c;">**High (Red)**</span>, <span style="color:#f39c12;">**Medium (Orange)**</span>, and <span style="color:#2ecc71;">**Low (Green)**</span>.</p>
+            <div class="map-container"><div id="map"></div></div>
+        </div>
+
+        <!-- Work Log Section -->
+        <div class="section">
+            <h2>Work Log</h2>
+            <p>This table tracks the work done on reported issues. Below you can load work orders generated by your backend script (JSON) or upload a local work_orders JSON file.</p>
+
+            <div class="toolbar">
+                <button class="btn-submit" onclick="runPrediction()">Run Prediction (backend)</button>
+                <button class="btn-submit" onclick="loadWorkOrdersFromServer()">Load latest work_orders</button>
+
+                <label style="background:#00264d;padding:6px 10px;border-radius:6px;cursor:pointer;border:1px solid #f5f5dc;">
+                    Upload work_orders JSON <input type="file" id="workorders-file" accept="application/json" style="display:none" onchange="handleWorkOrdersUpload(event)">
+                </label>
+
+                <div id="last-loaded" class="last-loaded">Last loaded: <span id="last-loaded-name">—</span></div>
+            </div>
+
+            <table class="worklog-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Work Order ID</th>
+                        <th>Drain / Hotspot</th>
+                        <th>Work Assigned</th>
+                        <th>Team Responsible</th>
+                        <th>Time Allotted</th>
+                        <th>Risk Score</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="worklog-table-body"></tbody>
+            </table>
+
+            <h3>Add New Work Log Entry (Manual)</h3>
+            <label for="new-date">Date:</label>
+            <input type="date" id="new-date">
+
+            <label for="new-hotspot">Hotspot / Drain ID:</label>
+            <input type="text" id="new-hotspot" placeholder="e.g., Sector 5, Gate 1 or drain_123">
+
+            <label for="new-work-assigned">Work Assigned:</label>
+            <input type="text" id="new-work-assigned" placeholder="e.g., Drain cleaning">
+
+            <label for="new-team">Team Responsible:</label>
+            <input type="text" id="new-team" placeholder="e.g., Team A">
+
+            <label for="new-time-allotted">Time Allotted:</label>
+            <input type="text" id="new-time-allotted" placeholder="e.g., 24 hours">
+
+            <button class="btn-submit" onclick="addWorkLogEntry()">Add Entry</button>
+        </div>
+    </div>
+
+    <div id="message-box" class="message-box"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        /* -------------------------
+           State: hotspots + workLog
+           ------------------------- */
+        let hotspotData = JSON.parse(localStorage.getItem('hotspotData')) || [
+            { id: 1, name: 'Sector 5, Gate 1', description: 'Severe waterlogging during moderate to heavy rainfall, causing traffic jams and public inconvenience.', priority: 'High', lat: 22.603841, lng: 88.423985 },
+            { id: 2, name: 'Dankuni Toll Plaza Exit', description: 'Accumulation of water on the service road leading to the toll plaza. Causes minor traffic slowdowns during peak hours and rain.', priority: 'Medium', lat: 22.6685, lng: 88.2936 },
+            { id: 3, name: 'City Centre, Entry 2', description: 'Minor water puddles form near the entrance of City Centre during heavy rain. Does not significantly impact traffic flow but is a public nuisance.', priority: 'Low', lat: 22.5855, lng: 88.4357 }
+        ];
+
+        let workLogData = JSON.parse(localStorage.getItem('workLog')) || [
+            { date: '2024-05-20', workOrderId: 'manual_1', hotspot: 'Sector 5, Gate 1', workAssigned: 'Initial drain cleaning', team: 'Team A', timeAllotted: '48 hours', riskScore: '', status: 'Completed' },
+            { date: '2024-05-19', workOrderId: 'manual_2', hotspot: 'Dankuni Toll Plaza Exit', workAssigned: 'Drain inspection', team: 'Team B', timeAllotted: '24 hours', riskScore: '', status: 'Pending' }
+        ];
+
+        let map = null;
+        let mapMarkers = [];
+        let pollingHandle = null;
+        let lastLoadedFilename = null;
+
+        function saveHotspotData() { 
+            localStorage.setItem('hotspotData', JSON.stringify(hotspotData)); 
+            initMap(); 
+        }
+        
+        function saveWorkLog() { 
+            localStorage.setItem('workLog', JSON.stringify(workLogData)); 
+        }
+
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.style.backgroundColor = type === 'success' ? '#2ecc71' : '#e74c3c';
+            messageBox.style.display = 'block';
+            setTimeout(() => { messageBox.style.display = 'none'; }, 3000);
+        }
+
+        /* -------------------------
+           Top drains UI
+           ------------------------- */
+        async function loadTopDrains(n = 4, demo = false) {
+            const container = document.getElementById('top-drains-row');
+            container.innerHTML = '<div style="padding:14px;color:#dcdcdc">Loading top drains...</div>';
+            try {
+                const url = `/api/top_drains?n=${encodeURIComponent(n)}${demo ? '&demo=1' : ''}`;
+                const resp = await fetch(url, { cache: 'no-store' });
+                if (!resp.ok) {
+                    container.innerHTML = `<div style="padding:14px;color:#e74c3c">Failed to load top drains (status ${resp.status})</div>`;
+                    return;
+                }
+                const payload = await resp.json();
+                const top = payload.top || [];
+                if (!top.length) {
+                    container.innerHTML = '<div style="padding:14px;color:#dcdcdc">No high-risk drains right now.</div>';
+                    return;
+                }
+                container.innerHTML = '';
+                top.forEach(d => {
+                    const card = document.createElement('div');
+                    card.className = 'top-drain-card';
+                    card.innerHTML = `
+                        <div class="drain-id">${escapeHtml(d.drain_id || '—')}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                            <div class="drain-meta">Floods: <strong>${d.flood_count || 0}</strong></div>
+                            <div class="card-status status-${d.risk_level || 'Low'}">${escapeHtml(d.risk_level || 'Unknown')}</div>
+                        </div>
+                        <div class="drain-meta">Risk score: <strong>${(d.risk_score || 0).toFixed(3)}</strong></div>
+                        <div style="margin-top:12px">
+                            <button class="btn-submit" onclick="centerMapOn(${d.lat || 0}, ${d.lon || 0})" style="margin-right:8px">Map</button>
+                            <button class="btn-submit" onclick="openWorkOrderFor('${escapeAttr(d.drain_id)}')">Open</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="padding:14px;color:#e74c3c">Error loading top drains.</div>';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]);
+        }
+
+        function escapeAttr(str) { return escapeHtml(str); }
+
+        function centerMapOn(lat, lon) {
+            if (!lat || !lon || !map) {
+                showMessage('Map location not available for this drain.', 'error');
+                return;
+            }
+            map.setView([lat, lon], 15);
+        }
+
+        function openWorkOrderFor(drainId) {
+            showMessage(`Open details for ${drainId}`, 'success');
+        }
+
+        /* -------------------------
+           Hotspot UI functions
+           ------------------------- */
+        function renderHotspots() {
+            const hotspotGrid = document.getElementById('hotspot-grid');
+            hotspotGrid.innerHTML = '';
+            hotspotData.forEach((hotspot, index) => {
+                const card = document.createElement('div');
+                card.className = 'hotspot-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>${hotspot.name}</h3>
+                        <span class="card-status status-${hotspot.priority}">${hotspot.priority}</span>
+                    </div>
+                    <p class="card-description">${hotspot.description}</p>
+                    <div style="text-align:right;">
+                        <button onclick="editHotspot(${index})" class="btn-submit" style="padding:5px 10px;margin-right:8px">Edit</button>
+                        <button onclick="deleteHotspot(${index})" class="btn-submit" style="padding:5px 10px;background-color:#e74c3c">Delete</button>
+                    </div>
+                `;
+                hotspotGrid.appendChild(card);
+            });
+        }
+
+        function addHotspot() {
+            const name = document.getElementById('new-hotspot-name').value.trim();
+            const description = document.getElementById('new-hotspot-description').value.trim();
+            const priority = document.getElementById('new-hotspot-priority').value;
+            
+            if (!name || !description) { 
+                showMessage('Please fill out all fields.', 'error'); 
+                return; 
+            }
+            
+            const newId = hotspotData.length > 0 ? Math.max(...hotspotData.map(h => h.id)) + 1 : 1;
+            hotspotData.push({ 
+                id: newId, 
+                name, 
+                description, 
+                priority, 
+                lat: 22.5726, 
+                lng: 88.3639 
+            });
+            
+            saveHotspotData(); 
+            renderHotspots(); 
+            showMessage('New hotspot added!', 'success');
+            
+            document.getElementById('new-hotspot-name').value = '';
+            document.getElementById('new-hotspot-description').value = '';
+        }
+
+        function editHotspot(index) {
+            const newName = prompt('Enter new name:', hotspotData[index].name);
+            const newDesc = prompt('Enter new description:', hotspotData[index].description);
+            const newPriority = prompt('Enter new priority (High/Medium/Low):', hotspotData[index].priority);
+            
+            if (newName && newDesc && newPriority && ['High', 'Medium', 'Low'].includes(newPriority)) {
+                hotspotData[index] = { 
+                    ...hotspotData[index], 
+                    name: newName, 
+                    description: newDesc, 
+                    priority: newPriority 
+                };
+                saveHotspotData(); 
+                renderHotspots(); 
+                showMessage('Hotspot updated successfully!', 'success');
+            }
+        }
+
+        function deleteHotspot(index) {
+            if (!confirm('Are you sure you want to delete this hotspot?')) return;
+            hotspotData.splice(index, 1); 
+            saveHotspotData(); 
+            renderHotspots(); 
+            showMessage('Hotspot deleted.', 'success');
+        }
+
+        /* -------------------------
+           Work log UI functions
+           ------------------------- */
+        function renderWorkLog() {
+            const tableBody = document.getElementById('worklog-table-body');
+            tableBody.innerHTML = '';
+            workLogData.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.date || ''}</td>
+                    <td>${entry.workOrderId || ''}</td>
+                    <td>${entry.hotspot || ''}</td>
+                    <td>${entry.workAssigned || 'Auto-assigned maintenance'}</td>
+                    <td>${entry.team || 'Auto'}</td>
+                    <td>${entry.timeAllotted || 'N/A'}</td>
+                    <td>${entry.riskScore !== undefined ? entry.riskScore : ''}</td>
+                    <td class="${(entry.status || '').toLowerCase() === 'completed' ? 'status-completed' : 'status-pending'}">${entry.status || ''}</td>
+                    <td>
+                        <button onclick="editWorkLogEntry(${index})" class="btn-submit" style="padding:3px 8px;margin-right:5px">Edit</button>
+                        <button onclick="deleteWorkLogEntry(${index})" class="btn-submit" style="padding:3px 8px;background-color:#e74c3c">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function addWorkLogEntry() {
+            const date = document.getElementById('new-date').value;
+            const hotspot = document.getElementById('new-hotspot').value.trim();
+            const workAssigned = document.getElementById('new-work-assigned').value.trim();
+            const team = document.getElementById('new-team').value.trim();
+            const timeAllotted = document.getElementById('new-time-allotted').value.trim();
+            
+            if (!date || !hotspot || !workAssigned) { 
+                showMessage('Please fill out Date, Hotspot and Work Assigned fields.', 'error'); 
+                return; 
+            }
+            
+            const newEntry = { 
+                date, 
+                workOrderId: `manual_${Date.now()}`, 
+                hotspot, 
+                workAssigned, 
+                team, 
+                timeAllotted, 
+                riskScore: '', 
+                status: 'Pending' 
+            };
+            
+            workLogData.unshift(newEntry); 
+            saveWorkLog(); 
+            renderWorkLog(); 
+            showMessage('New entry added!', 'success');
+            
+            document.getElementById('new-date').value = '';
+            document.getElementById('new-hotspot').value = '';
+            document.getElementById('new-work-assigned').value = '';
+            document.getElementById('new-team').value = '';
+            document.getElementById('new-time-allotted').value = '';
+        }
+
+        function editWorkLogEntry(index) {
+            const entry = workLogData[index];
+            const newDate = prompt('Enter date:', entry.date);
+            const newHotspot = prompt('Enter hotspot:', entry.hotspot);
+            const newWork = prompt('Enter work assigned:', entry.workAssigned);
+            const newTeam = prompt('Enter team:', entry.team);
+            const newTime = prompt('Enter time allotted:', entry.timeAllotted);
+            const newStatus = prompt('Enter status (Pending/Completed):', entry.status);
+            
+            if (newDate && newHotspot && newWork) {
+                workLogData[index] = {
+                    ...entry,
+                    date: newDate,
+                    hotspot: newHotspot,
+                    workAssigned: newWork,
+                    team: newTeam || entry.team,
+                    timeAllotted: newTime || entry.timeAllotted,
+                    status: newStatus || entry.status
+                };
+                saveWorkLog(); 
+                renderWorkLog(); 
+                showMessage('Entry updated successfully!', 'success');
+            }
+        }
+
+        function deleteWorkLogEntry(index) {
+            if (!confirm('Are you sure you want to delete this entry?')) return;
+            workLogData.splice(index, 1); 
+            saveWorkLog(); 
+            renderWorkLog(); 
+            showMessage('Entry deleted.', 'success');
+        }
+
+        /* -------------------------
+           Work Orders ingestion
+           ------------------------- */
+        function ingestWorkOrdersArray(arr, sourceFilename) {
+            if (!Array.isArray(arr)) { 
+                showMessage('Work orders JSON should be an array.', 'error'); 
+                return; 
+            }
+
+            const newEntries = arr.map(wo => {
+                const date = wo.created_at ? wo.created_at.split('T')[0] : (new Date()).toISOString().split('T')[0];
+                const workOrderId = wo.work_order_id || wo.id || `WO_${Math.floor(Math.random() * 1e6)}`;
+                const hotspot = wo.drain_id || wo.hotspot || '';
+                const workAssigned = wo.workAssigned || `Respond to drain ${hotspot}`;
+                const team = wo.team || 'Auto';
+                const timeAllotted = wo.timeAllotted || 'N/A';
+                const riskScore = (wo.risk_score !== undefined) ? wo.risk_score : (wo.risk || '');
+                const status = wo.status || 'Pending';
+                const lat = (wo.lat !== undefined) ? Number(wo.lat) : (wo.latitude !== undefined ? Number(wo.latitude) : null);
+                const lon = (wo.lon !== undefined) ? Number(wo.lon) : (wo.longitude !== undefined ? Number(wo.longitude) : null);
+                
+                return { date, workOrderId, hotspot, workAssigned, team, timeAllotted, riskScore, status, lat, lon };
+            });
+
+            workLogData = newEntries.concat(workLogData);
+            saveWorkLog();
+            renderWorkLog();
+
+            if (sourceFilename) {
+                lastLoadedFilename = sourceFilename;
+                document.getElementById('last-loaded-name').textContent = `${sourceFilename} @ ${new Date().toLocaleTimeString()}`;
+            }
+        }
+
+        async function loadWorkOrdersFromServer() {
+            try {
+                const resp = await fetch('/api/work_orders/latest', { cache: 'no-store' });
+                if (!resp.ok) {
+                    if (resp.status === 404) showMessage('No work_orders present on server.', 'error');
+                    else showMessage(`Server returned ${resp.status}`, 'error');
+                    return;
+                }
+                const payload = await resp.json();
+                if (!payload || (!payload.data && !payload.filename)) { 
+                    showMessage('Unexpected server response.', 'error'); 
+                    return; 
+                }
+                const filename = payload.filename || `server_${Date.now()}`;
+                const arr = Array.isArray(payload.data) ? payload.data : (payload.data && Array.isArray(payload.data.work_orders) ? payload.data.work_orders : []);
+                
+                if (!Array.isArray(arr) || arr.length === 0) { 
+                    showMessage('No work orders array found in response.', 'error'); 
+                    return; 
+                }
+                
+                if (filename === lastLoadedFilename) return;
+                ingestWorkOrdersArray(arr, filename);
+                showMessage(`Loaded ${arr.length} work orders from ${filename}`, 'success');
+            } catch (err) {
+                console.error(err);
+                showMessage('Failed to fetch work orders from backend. Ensure backend is running.', 'error');
+            }
+        }
+
+        function startPolling(intervalMs = 15000) {
+            if (pollingHandle) clearInterval(pollingHandle);
+            pollingHandle = setInterval(loadWorkOrdersFromServer, intervalMs);
+        }
+
+        /* -------------------------
+           Run prediction
+           ------------------------- */
+        async function runPrediction() {
+            showMessage('Triggering backend prediction...', 'success');
+            try {
+                const resp = await fetch('/api/predict', { method: 'GET', cache: 'no-store' });
+                if (!resp.ok) { 
+                    showMessage(`Prediction endpoint returned ${resp.status}`, 'error'); 
+                    return; 
+                }
+                const payload = await resp.json();
+                if (payload.work_orders && Array.isArray(payload.work_orders)) {
+                    ingestWorkOrdersArray(payload.work_orders, `api_predict_${Date.now()}`);
+                    showMessage(`Prediction returned ${payload.work_orders.length} work orders`, 'success');
+                } else if (payload.data && Array.isArray(payload.data)) {
+                    ingestWorkOrdersArray(payload.data, payload.filename || `api_predict_${Date.now()}`);
+                    showMessage(`Prediction returned ${payload.data.length} work orders`, 'success');
+                } else {
+                    showMessage('Prediction returned no work orders', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showMessage('Failed to trigger prediction', 'error');
+            }
+        }
+
+        /* -------------------------
+           File upload
+           ------------------------- */
+        function handleWorkOrdersUpload(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const arr = Array.isArray(data) ? data : (data.data || data.work_orders || []);
+                    if (!Array.isArray(arr)) { 
+                        showMessage('Uploaded JSON does not contain an array', 'error'); 
+                        return; 
+                    }
+                    ingestWorkOrdersArray(arr, file.name);
+                    showMessage(`Loaded ${arr.length} work orders from uploaded file.`, 'success');
+                } catch (err) {
+                    showMessage('Invalid JSON file.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            evt.target.value = '';
+        }
+
+        /* -------------------------
+           Map functions
+           ------------------------- */
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            if (map) {
+                map.remove();
+            }
+            
+            map = L.map('map').setView([22.593, 88.365], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Clear existing markers
+            mapMarkers.forEach(marker => map.removeLayer(marker));
+            mapMarkers = [];
+
+            // Add hotspot markers
+            hotspotData.forEach(hotspot => {
+                const color = hotspot.priority === 'High' ? '#e74c3c' : 
+                             hotspot.priority === 'Medium' ? '#f39c12' : '#2ecc71';
+                
+                const marker = L.circleMarker([hotspot.lat, hotspot.lng], {
+                    radius: 10,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.7
+                }).addTo(map);
+                
+                marker.bindPopup(`
+                    <b>${hotspot.name}</b><br>
+                    Priority: ${hotspot.priority}<br>
+                    ${hotspot.description}
+                `);
+                
+                mapMarkers.push(marker);
+            });
+
+            // Add work order markers
+            workLogData.forEach(work => {
+                if (work.lat && work.lon) {
+                    const marker = L.circleMarker([work.lat, work.lon], {
+                        radius: 8,
+                        color: '#3498db',
+                        fillColor: '#3498db',
+                        fillOpacity: 0.7
+                    }).addTo(map);
+                    
+                    marker.bindPopup(`
+                        <b>${work.workOrderId}</b><br>
+                        ${work.hotspot}<br>
+                        Status: ${work.status}
+                    `);
+                    
+                    mapMarkers.push(marker);
+                }
+            });
+        }
+
+        /* -------------------------
+           Initialize
+           ------------------------- */
+        window.onload = () => {
+            renderHotspots();
+            renderWorkLog();
+            initMap();
+            startPolling();
+            loadTopDrains(4);
+            setInterval(() => loadTopDrains(4), 30000);
+        };
+    </script>
+</body>
+</html>

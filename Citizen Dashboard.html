@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citizen Dashboard - Micro Clog</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #001f3f; /* Dark Blue Background */
+      margin: 0;
+      padding: 0;
+      color: #f5f5dc; /* Beige Text */
+    }
+    .header {
+      background: linear-gradient(90deg, #001833, #00264d);
+      color: #f5f5dc;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f5f5dc;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .header h1 { 
+      margin: 0; 
+      font-size: 2em; 
+      letter-spacing: 1px; 
+    }
+    .header-buttons a {
+      color: #f5f5dc;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 8px;
+      border: 1px solid #f5f5dc;
+      transition: all 0.3s;
+      margin-left: 10px;
+    }
+    .header-buttons a:hover {
+      background-color: #ffd700; /* Chrome yellow hover */
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    .main-content { 
+      padding: 40px; 
+      max-width: 1200px; 
+      margin: auto; 
+    }
+    .section {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 12px;
+      border: 1.5px solid #f5f5dc;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      margin-bottom: 40px;
+    }
+    h2 {
+      color: #f5f5dc;
+      font-size: 1.8em;
+      margin-top: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #171155; /* dark blue underline */
+      padding-bottom: 10px;
+    }
+    label { 
+      display: block; 
+      margin-bottom: 8px; 
+      font-weight: 600; 
+      color: #f5f5dc;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      background: #00264d;
+      color: #f5f5dc;
+      border: 1px solid #f5f5dc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #dcdcdc;
+    }
+    button.btn-submit {
+      background-color: #001f3f;
+      color: #f5f5dc;
+      border: 1px solid #f5f5dc;
+      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    button.btn-submit:hover {
+      background-color: #ffd700; /* Chrome yellow hover */
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    .map-container { 
+      height: 500px; 
+      border-radius: 12px; 
+      overflow: hidden; 
+      border: 2px solid #f5f5dc; 
+      margin-top: 20px; 
+    }
+    #map { width: 100%; height: 100%; }
+    .route-form { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-top: 10px; 
+    }
+    .route-form input { flex: 1; }
+    .worklog-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 20px; 
+      border: 2px solid #f5f5dc; 
+    }
+    .worklog-table th, .worklog-table td { 
+      padding: 12px 15px; 
+      text-align: left; 
+      border-bottom: 1px solid #f5f5dc; 
+    }
+    .worklog-table th { 
+      background-color: #00264d; 
+      color: #f5f5dc; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+    }
+    .worklog-table tr:nth-child(even) { 
+      background-color: rgba(255, 255, 255, 0.05); 
+    }
+    .message-box {
+      position: fixed; 
+      top: 20px; 
+      left: 50%; 
+      transform: translateX(-50%);
+      background-color: #2ecc71; 
+      color: white; 
+      padding: 15px 30px;
+      border-radius: 8px; 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 1000; 
+      display: none;
+    }
+    #directions { 
+      margin-top:15px; 
+      background: rgba(255,255,255,0.05); 
+      padding:10px; 
+      border-radius:8px; 
+      max-height:200px; 
+      overflow:auto; 
+      border: 1px solid #f5f5dc;
+    }
+    #directions li { margin: 4px 0; }
+    @media (max-width: 768px) {
+      .main-content { padding: 20px; }
+      .header { flex-direction: column; padding: 20px; }
+      .header-buttons { margin-top: 15px; }
+      .header-buttons a { margin: 5px 0; display:inline-block; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Micro Clog Citizen</h1>
+    <div class="header-buttons">
+      <a href="index.html" class="btn-back">Back to Login</a>
+      <a href="index.html" class="btn-logout">Log Out</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Report Submission Section -->
+    <div class="section">
+      <h2>Submit a Report</h2>
+      <form id="report-form">
+        <div class="form-group">
+          <label for="report-text">Report Details</label>
+          <textarea id="report-text" placeholder="Describe the issue, location, and severity" rows="5" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="report-image">Image</label>
+          <input type="file" id="report-image" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="report-video">Video</label>
+          <input type="file" id="report-video" accept="video/*">
+        </div>
+        <div class="form-group">
+          <label for="report-audio">Audio</label>
+          <input type="file" id="report-audio" accept="audio/*">
+        </div>
+        <button type="submit" class="btn-submit">Submit Report</button>
+      </form>
+    </div>
+
+    <!-- Map Section -->
+    <div class="section">
+      <h2>Hotspot and Route Map</h2>
+      <p>View hotspots and find alternate routes avoiding them.</p>
+      <div class="map-container"><div id="map"></div></div>
+      <div class="route-form">
+        <input type="text" id="pickup" placeholder="Enter pickup location">
+        <input type="text" id="drop" placeholder="Enter drop location">
+        <button onclick="calculateRoute()" class="btn-submit">Show Route</button>
+      </div>
+      <div id="directions">
+        <b>Navigation Instructions:</b>
+        <ul id="directions-list"></ul>
+      </div>
+    </div>
+
+    <!-- Work Log Section -->
+    <div class="section">
+      <h2>Active Work Log</h2>
+      <table class="worklog-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Hotspot</th>
+            <th>Work Assigned</th>
+            <th>Pic</th>
+            <th>Team Responsible</th>
+            <th>Time Allotted</th>
+          </tr>
+        </thead>
+        <tbody id="worklog-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="message-box" class="message-box"></div>
+
+  <!-- Leaflet -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjkwNmVkNWM2NjhiODQ0YTNiOTgxNzU0MzdhMDI1MzdkIiwiaCI6Im11cm11cjY0In0=";
+
+    const map = L.map("map").setView([22.593, 88.365], 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    const hotspots = [
+      { name: "Sector 5, Gate 1", lat: 22.603841, lng: 88.423985, priority: "High" },
+      { name: "Dankuni Toll Plaza Exit", lat: 22.6685, lng: 88.2936, priority: "Medium" },
+      { name: "City Centre, Entry 2", lat: 22.5855, lng: 88.4357, priority: "Low" }
+    ];
+    const colors = { High: "#ffd700", Medium: "#ffa500", Low: "#00ff00" }; // Chrome yellow accent for high
+    hotspots.forEach(h => {
+      L.circle([h.lat, h.lng], { radius: 200, color: colors[h.priority] })
+        .addTo(map)
+        .bindPopup(`<b>${h.name}</b><br>Priority: ${h.priority}`);
+    });
+
+    let routeLayer = null;
+
+    async function geocode(query) {
+      const url = `https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(query)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.features && data.features.length > 0) {
+        return { lat: data.features[0].geometry.coordinates[1], lng: data.features[0].geometry.coordinates[0] };
+      }
+      return null;
+    }
+
+    async function calculateRoute() {
+      const pickup = document.getElementById("pickup").value;
+      const drop = document.getElementById("drop").value;
+      if (!pickup || !drop) { alert("Enter both pickup and drop"); return; }
+
+      const start = await geocode(pickup);
+      const end = await geocode(drop);
+      if (!start || !end) { alert("Could not find one of the locations"); return; }
+
+      function circlePolygon(lat, lng, radiusMeters, points = 16) {
+        const coords = [];
+        const R = 6378137;
+        for (let i = 0; i <= points; i++) {
+          const angle = (i / points) * 2 * Math.PI;
+          const dx = radiusMeters * Math.cos(angle);
+          const dy = radiusMeters * Math.sin(angle);
+          const newLng = lng + (dx / (R * Math.cos((lat * Math.PI) / 180))) * (180 / Math.PI);
+          const newLat = lat + (dy / R) * (180 / Math.PI);
+          coords.push([newLng, newLat]);
+        }
+        return [coords];
+      }
+
+      const avoidAreas = { type: "MultiPolygon", coordinates: hotspots.map(h => circlePolygon(h.lat, h.lng, 150)) };
+      const body = { coordinates: [[start.lng, start.lat], [end.lng, end.lat]], options: { avoid_polygons: avoidAreas }, instructions: true };
+
+      async function requestRoute(requestBody) {
+        const res = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
+          method: "POST",
+          headers: { "Authorization": apiKey, "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody)
+        });
+        return res.json();
+      }
+
+      let data = await requestRoute(body);
+      if (!data.features || !data.features[0]) { delete body.options.avoid_polygons; data = await requestRoute(body); }
+
+      if (routeLayer) map.removeLayer(routeLayer);
+      if (data && data.features && data.features[0]) {
+        const coords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+        routeLayer = L.polyline(coords, { color: "#ffd700", weight: 5 }).addTo(map); // Chrome yellow route
+        map.fitBounds(routeLayer.getBounds());
+
+        const list = document.getElementById("directions-list");
+        list.innerHTML = "";
+        if (data.features[0].properties.segments) {
+          data.features[0].properties.segments[0].steps.forEach(step => {
+            const li = document.createElement("li");
+            li.textContent = `${step.instruction} (${Math.round(step.distance)} m)`;
+            list.appendChild(li);
+          });
+        }
+      } else { alert("Still no route found"); }
+    }
+
+    const workLogData = [
+      { date: "2024-05-20", hotspot: "Sector 5, Gate 1", workAssigned: "Drain cleaning", workPic: "drain.jpg", team: "Team A", timeAllotted: "48h" },
+      { date: "2024-05-19", hotspot: "Dankuni Toll Plaza Exit", workAssigned: "Inspection", workPic: "inspect.jpg", team: "Team B", timeAllotted: "24h" }
+    ];
+    function renderWorkLog() {
+      const tableBody = document.getElementById("worklog-table-body");
+      tableBody.innerHTML = "";
+      workLogData.forEach(entry => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${entry.date}</td><td>${entry.hotspot}</td><td>${entry.workAssigned}</td><td><a href="#">${entry.workPic}</a></td><td>${entry.team}</td><td>${entry.timeAllotted}</td>`;
+        tableBody.appendChild(row);
+      });
+    }
+    renderWorkLog();
+  </script>
+</body>
+</html>

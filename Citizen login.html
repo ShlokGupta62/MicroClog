@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citizen Signup - Micro Clog</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #001f3f; /* Dark Blue Background */
+      margin: 0;
+      padding: 0;
+      color: #f5f5dc; /* Beige Text */
+    }
+    .header {
+      background: linear-gradient(90deg, #001833, #00264d);
+      color: #f5f5dc;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f5f5dc;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .header h1 { 
+      margin: 0; 
+      font-size: 2em; 
+      letter-spacing: 1px; 
+    }
+    .header-buttons a {
+      color: #f5f5dc;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 8px;
+      border: 1px solid #f5f5dc;
+      transition: all 0.3s;
+      margin-left: 10px;
+    }
+    .header-buttons a:hover {
+      background-color: #ffd700; 
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    .main-content { 
+      padding: 40px; 
+      max-width: 600px; 
+      margin: auto; 
+    }
+    .section {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 12px;
+      border: 1.5px solid #f5f5dc;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      margin-bottom: 40px;
+    }
+    h2 {
+      color: #f5f5dc;
+      font-size: 1.8em;
+      margin-top: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #171155;
+      padding-bottom: 10px;
+      text-align: center;
+    }
+    label { 
+      display: block; 
+      margin-bottom: 8px; 
+      font-weight: 600; 
+      color: #f5f5dc;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      background: #00264d;
+      color: #f5f5dc;
+      border: 1px solid #f5f5dc;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+    input::placeholder {
+      color: #dcdcdc;
+    }
+    button {
+      background-color: #001f3f;
+      color: #f5f5dc;
+      border: 1px solid #f5f5dc;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      width: 100%;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    button:hover {
+      background-color: #ffd700;
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    .btn-back {
+      display: block;
+      margin-top: 15px;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #f5f5dc;
+      text-decoration: none;
+      color: #f5f5dc;
+      transition: all 0.3s;
+    }
+    .btn-back:hover {
+      background-color: #ffd700;
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    #message {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Micro Clog</h1>
+    <div class="header-buttons">
+      <a href="Login MC.html">Back to Login</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="section">
+      <h2>Citizen Account Signup</h2>
+      <form id="signup-form">
+        <label for="citizen-name">Name</label>
+        <input type="text" id="citizen-name" name="name" placeholder="Enter your full name" required>
+
+        <label for="citizen-phone">Phone Number</label>
+        <input type="tel" id="citizen-phone" name="phone" placeholder="Enter phone number" required>
+
+        <label for="citizen-password">Create Password</label>
+        <input type="password" id="citizen-password" name="password" placeholder="Create a password" required>
+
+        <label for="citizen-residence">Place of Residence</label>
+        <input type="text" id="citizen-residence" name="residence" placeholder="Enter your place of residence" required>
+
+        <label for="citizen-gov-id">Government ID Number</label>
+        <input type="text" id="citizen-gov-id" name="gov-id" placeholder="Enter government ID number" required>
+
+        <label for="citizen-photo">Your Photo</label>
+        <input type="file" id="citizen-photo" name="photo" accept="image/*" required>
+
+        <label for="citizen-id-photo">ID Card Photo</label>
+        <input type="file" id="citizen-id-photo" name="id-photo" accept="image/*" required>
+
+        <button type="submit">Create Citizen Account</button>
+      </form>
+      <div id="message"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('signup-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('citizen-name').value;
+      const phone = document.getElementById('citizen-phone').value;
+      const password = document.getElementById('citizen-password').value;
+      const residence = document.getElementById('citizen-residence').value;
+      const govId = document.getElementById('citizen-gov-id').value;
+      const photoFile = document.getElementById('citizen-photo').files[0];
+      const idCardFile = document.getElementById('citizen-id-photo').files[0];
+      const messageDiv = document.getElementById('message');
+      const form = document.getElementById('signup-form');
+
+      if (name.trim() === '' || phone.trim() === '' || password.trim() === '' || residence.trim() === '' || govId.trim() === '' || !photoFile || !idCardFile) {
+        messageDiv.textContent = 'Please fill out all fields and provide photos.';
+        messageDiv.style.color = '#ff4d4d';
+        return;
+      }
+
+      let citizenAccounts = JSON.parse(localStorage.getItem('citizenAccounts')) || [];
+      const accountExists = citizenAccounts.some(account => account.phone === phone || account.govId === govId);
+      if (accountExists) {
+        messageDiv.textContent = 'An account with this phone number or Government ID already exists.';
+        messageDiv.style.color = '#ffd700';
+        return;
+      }
+
+      citizenAccounts.push({
+        name, phone, password, residence, govId,
+        photo: photoFile.name,
+        idCardPhoto: idCardFile.name
+      });
+
+      localStorage.setItem('citizenAccounts', JSON.stringify(citizenAccounts));
+
+      form.style.display = 'none';
+      messageDiv.textContent = 'Citizen account created successfully!';
+      messageDiv.style.color = '#2ecc71';
+    });
+  </script>
+</body>
+</html>

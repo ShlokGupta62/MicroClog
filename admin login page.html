@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Signup - Micro Clog</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #001f3f; /* Dark Blue Background */
+      margin: 0;
+      padding: 0;
+      color: #f5f5dc; /* Beige Text */
+    }
+    .header {
+      background: linear-gradient(90deg, #001833, #00264d);
+      color: #f5f5dc;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f5f5dc;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .header h1 { 
+      margin: 0; 
+      font-size: 2em; 
+      letter-spacing: 1px; 
+    }
+    .header-buttons a {
+      color: #f5f5dc;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 8px;
+      border: 1px solid #f5f5dc;
+      transition: all 0.3s;
+      margin-left: 10px;
+    }
+    .header-buttons a:hover {
+      background-color: #ffd700; 
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    .main-content { 
+      padding: 40px; 
+      max-width: 600px; 
+      margin: auto; 
+    }
+    .section {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 12px;
+      border: 1.5px solid #f5f5dc;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      margin-bottom: 40px;
+    }
+    h2 {
+      color: #f5f5dc;
+      font-size: 1.8em;
+      margin-top: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #171155;
+      padding-bottom: 10px;
+      text-align: center;
+    }
+    label { 
+      display: block; 
+      margin-bottom: 8px; 
+      font-weight: 600; 
+      color: #f5f5dc;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      background: #00264d;
+      color: #f5f5dc;
+      border: 1px solid #f5f5dc;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+    input::placeholder {
+      color: #dcdcdc;
+    }
+    button {
+      background-color: #001f3f;
+      color: #f5f5dc;
+      border: 1px solid #f5f5dc;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      width: 100%;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    button:hover {
+      background-color: #ffd700;
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    .btn-back {
+      display: block;
+      margin-top: 15px;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #f5f5dc;
+      text-decoration: none;
+      color: #f5f5dc;
+      transition: all 0.3s;
+    }
+    .btn-back:hover {
+      background-color: #ffd700;
+      color: #001f3f;
+      border-color: #ffd700;
+    }
+    #message {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Micro Clog</h1>
+    <div class="header-buttons">
+      <a href="Login MC.html" class="btn-back">Back to Login</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="section">
+      <h2>Admin Account Signup</h2>
+      <form id="signup-form">
+        <label for="admin-phone">Phone Number</label>
+        <input type="tel" id="admin-phone" name="phone" placeholder="Enter phone number" required>
+
+        <label for="admin-password">Create Password</label>
+        <input type="password" id="admin-password" name="password" placeholder="Create a password" required>
+
+        <label for="admin-department">Department</label>
+        <input type="text" id="admin-department" name="department" placeholder="Enter department" required>
+
+        <label for="admin-rank">Rank</label>
+        <input type="text" id="admin-rank" name="rank" placeholder="Enter rank" required>
+
+        <label for="admin-position">Position</label>
+        <input type="text" id="admin-position" name="position" placeholder="Enter position" required>
+
+        <label for="admin-gov-id">Government ID</label>
+        <input type="text" id="admin-gov-id" name="gov-id" placeholder="Enter government ID" required>
+
+        <label for="admin-photo">Your Photo</label>
+        <input type="file" id="admin-photo" name="photo" accept="image/*" required>
+
+        <label for="admin-id-photo">ID Card Photo</label>
+        <input type="file" id="admin-id-photo" name="id-photo" accept="image/*" required>
+
+        <button type="submit">Create Admin Account</button>
+      </form>
+      <div id="message"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('signup-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const phone = document.getElementById('admin-phone').value;
+      const password = document.getElementById('admin-password').value;
+      const department = document.getElementById('admin-department').value;
+      const rank = document.getElementById('admin-rank').value;
+      const position = document.getElementById('admin-position').value;
+      const govId = document.getElementById('admin-gov-id').value;
+      const photoFile = document.getElementById('admin-photo').files[0];
+      const idCardFile = document.getElementById('admin-id-photo').files[0];
+      const messageDiv = document.getElementById('message');
+      const form = document.getElementById('signup-form');
+
+      if (phone.trim() === '' || password.trim() === '' || department.trim() === '' || rank.trim() === '' || position.trim() === '' || govId.trim() === '' || !photoFile || !idCardFile) {
+        messageDiv.textContent = 'Please fill out all fields and provide photos.';
+        messageDiv.style.color = '#ff4d4d';
+        return;
+      }
+
+      const photoFileName = photoFile.name;
+      const idCardFileName = idCardFile.name;
+
+      let adminAccounts = JSON.parse(localStorage.getItem('adminAccounts')) || [];
+
+      const accountExists = adminAccounts.some(account => account.phone === phone || account.govId === govId);
+      if (accountExists) {
+        messageDiv.textContent = 'An account with this phone number or Government ID already exists.';
+        messageDiv.style.color = '#ffd700';
+        return;
+      }
+
+      adminAccounts.push({
+        phone, password, department, rank, position, govId,
+        photo: photoFileName,
+        idCardPhoto: idCardFileName
+      });
+
+      localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts));
+
+      // Hide the form and Back button
+      form.style.display = 'none';
+      document.querySelector('.btn-back').style.display = 'none';
+
+      // Show success + login button
+      messageDiv.textContent = 'Admin account created successfully!';
+      messageDiv.style.color = '#2ecc71';
+
+      const loginButton = document.createElement('a');
+      loginButton.href = 'Login MC.html';
+      loginButton.textContent = 'Go to Login Page';
+      loginButton.className = 'btn-back';
+      loginButton.style.marginTop = '20px';
+      document.querySelector('.section').appendChild(loginButton);
+    });
+  </script>
+</body>
+</html>
